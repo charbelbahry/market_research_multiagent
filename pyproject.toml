@@ -1,0 +1,11 @@
+[project]
+name = "market-research-multiagent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "fastapi[standard]>=0.138.0",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]

@@ -21,8 +21,8 @@ You're interview-ready when **all** of these are true:
 - [x] `pytest` green (1 test)
 
 ### M1 — The Contract (schemas)
-- [ ] Models import cleanly
-- [ ] 4+ validation tests green (valid payload, idea too short, bad recommendation, confidence out of range)
+- [x] Models import cleanly
+- [x] 4+ validation tests green (valid payload, idea too short, bad recommendation, confidence out of range)
 
 ### M2 — Mock Engine
 - [ ] `MockEngine().analyze("...")` returns a valid `FeasibilityReport`

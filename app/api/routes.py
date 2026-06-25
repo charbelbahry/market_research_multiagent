@@ -13,10 +13,7 @@ def check_health():
     return {"status": "ok", "engine": "CrewAI" if settings.use_real_crew else "Mock"}
 
 
-@router.post(
-    "/analyze", response_model=AnalyzeResponse, status_code=status.HTTP_200_OK
-)
+@router.post("/analyze", response_model=AnalyzeResponse, status_code=status.HTTP_200_OK)
 def analyze_idea(request: AnalyzeRequest, settings: Settings = Depends(get_settings)):
     orchestrator = Orchestrator(settings)
-    # We call analyze synchronously for now, will make it async in M7
     return orchestrator.analyze(request.idea)

@@ -1,6 +1,13 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.config import get_settings
+
+@pytest.fixture(autouse=True)
+def mock_env(monkeypatch):
+    monkeypatch.setenv("USE_REAL_CREW", "false")
+    get_settings.cache_clear()
 
 client = TestClient(app)
 

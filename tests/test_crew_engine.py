@@ -9,8 +9,8 @@ from app.schemas.report import FeasibilityReport
 def test_crew_engine_kickoff(monkeypatch):
     monkeypatch.setenv("OPENROUTER_API_KEY", "fake_key")
     settings = Settings(
-        cheap_model_name="openrouter/google/gemini-2.0-flash-exp:free",
-        strong_model_name="openrouter/deepseek/deepseek-r1:free"
+        cheap_model_name="openrouter/openai/gpt-4o-mini",
+        strong_model_name="openrouter/nvidia/nemotron-3-ultra-550b-a55b:free"
     )
     
     engine = CrewEngine(settings)

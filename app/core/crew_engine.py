@@ -27,12 +27,12 @@ class CrewEngine:
         """Run the multi-agent pipeline."""
 
         result = self.crew.kickoff(inputs={"idea": idea})
-        
+
         report: FeasibilityReport | None = None
 
         # Bypass strict type hints that union CrewOutput and CrewStreamingOutput
         pydantic_output = getattr(result, "pydantic", None)
-        
+
         if pydantic_output is not None:
             if isinstance(pydantic_output, FeasibilityReport):
                 report = pydantic_output

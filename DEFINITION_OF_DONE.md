@@ -45,12 +45,12 @@ You're interview-ready when **all** of these are true:
 - [x] `SearchInput` rejects `max_results=99`
 - [x] Tests green (no real network calls)
 
-### M5 — Agents + Multi-Model Routing
-- [ ] `build_agents(...)` returns 4 `Agent` instances with expected roles
-- [ ] Researcher has exactly one tool; others have none
-- [ ] Research/Market/Risk agents use cheap model; Strategy uses strong model
-- [ ] No network/LLM call happens at construction
-- [ ] Tests green
+### M5 — Agents + Multi-Model Routing ✅
+- [x] `build_agents(...)` returns 4 `Agent` instances with expected roles
+- [x] Researcher has exactly one tool; others have none
+- [x] Research/Market/Risk agents use cheap model; Strategy uses strong model
+- [x] No network/LLM call happens at construction
+- [x] Tests green
 
 ### M6 — Tasks & Crew
 - [ ] With a real key, `/analyze` produces a genuine 4-agent report

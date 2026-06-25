@@ -4,7 +4,8 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     app_name: str = "AI product research analyzer"
-    model_name: str = "gpt-4o-mini"
+    cheap_model_name: str = "gpt-4o-mini"
+    strong_model_name: str = "gpt-4o"
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
     open_router_api_key: str | None = None
@@ -14,7 +15,7 @@ class Settings(BaseSettings):
     request_timeout_seconds: int = 120
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", frozen=True
+        env_file=".env", env_file_encoding="utf-8", frozen=True, extra="ignore"
     )
 
 

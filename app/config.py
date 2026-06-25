@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
     open_router_api_key: str | None = None
-    serper_api_key: str | None = None
+    serpapi_api_key: str | None = None
     tavily_api_key: str | None = None
     use_real_crew: bool = False
     request_time_out_seconds: int = 120

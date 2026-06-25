@@ -6,10 +6,8 @@ from app.tools.search_tool import SearchInput, WebSearchTool
 
 
 def test_search_input_validation():
-    # Valid input
     SearchInput(query="test", max_results=5)
 
-    # Invalid max_results
     with pytest.raises(ValidationError):
         SearchInput(query="test", max_results=99)
 
@@ -20,7 +18,7 @@ def test_search_input_validation():
 def test_web_search_tool_mock_fallback(monkeypatch):
     monkeypatch.setattr(
         "app.tools.search_tool.get_settings",
-        lambda: Settings(serper_api_key=None, tavily_api_key=None),
+        lambda: Settings(serpapi_api_key=None, tavily_api_key=None),
     )
 
     tool = WebSearchTool()
@@ -33,7 +31,7 @@ def test_web_search_tool_mock_fallback(monkeypatch):
 def test_web_search_tool_serper(monkeypatch):
     monkeypatch.setattr(
         "app.tools.search_tool.get_settings",
-        lambda: Settings(serper_api_key="fake_key", tavily_api_key=None),
+        lambda: Settings(serpapi_api_key="fake_key", tavily_api_key=None),
     )
 
     class FakeSerper:
@@ -54,7 +52,7 @@ def test_web_search_tool_serper(monkeypatch):
 def test_web_search_tool_tavily(monkeypatch):
     monkeypatch.setattr(
         "app.tools.search_tool.get_settings",
-        lambda: Settings(tavily_api_key="fake_key", serper_api_key=None),
+        lambda: Settings(tavily_api_key="fake_key", serpapi_api_key=None),
     )
 
     class FakeTavily:
@@ -75,7 +73,7 @@ def test_web_search_tool_tavily(monkeypatch):
 def test_web_search_tool_handles_exceptions(monkeypatch):
     monkeypatch.setattr(
         "app.tools.search_tool.get_settings",
-        lambda: Settings(serper_api_key="fake_key", tavily_api_key=None),
+        lambda: Settings(serpapi_api_key="fake_key", tavily_api_key=None),
     )
 
     class FailingSerper:

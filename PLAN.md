@@ -18,16 +18,17 @@ Target build time: **1–2 focused days.** Each milestone is independently shipp
 - [3. Milestones](#3-milestones)
   - [M0 — Scaffold & Health](#m0)
   - [M1 — The Contract (schemas)](#m1)
-  - [M2 — Mock Engine (the spine)](#m2)
+  - [M2 — Mock Engine (lightweight, testing utility)](#m2)
   - [M3 — API wired to orchestrator](#m3)
   - [M4 — Tools layer (search + mock)](#m4)
-  - [M5 — Agents](#m5)
+  - [M5 — Agents + Multi-Model Routing](#m5)
   - [M6 — Tasks & Crew (the real pipeline)](#m6)
   - [M7 — Async, timeouts, graceful degradation](#m7)
-  - [M8 — Tests, lint, types, CI](#m8)
-  - [M9 — Docker](#m9)
-  - [M10 — Docs, diagram, demo script](#m10)
-  - [M11 — Extensions (optional, but they impress)](#m11)
+  - [M8 — MCP Server](#m8)
+  - [M9 — Observability (LangFuse)](#m9)
+  - [M10 — Tests, lint, types, CI](#m10)
+  - [M11 — Docker](#m11)
+  - [M12 — Docs, diagram, demo script](#m12)
 - [4. The 2–3 Minute Interview Pitch](#4-pitch)
 - [5. The Kill-Shot Questions (and your answers)](#5-questions)
 - [6. Failure Modes You Must Be Able to Name](#6-failure-modes)
@@ -62,17 +63,19 @@ If you can draw that diagram on a whiteboard and explain why each box exists, yo
 ---
 
 <a name="1-the-golden-rule"></a>
-## 1. The Golden Rule of This Project
+## 1. The Project's Core Principles
 
-> **It must run with zero API keys.**
+> **Production-grade AI engineering, not just a wrapper.**
 
-This single constraint is your best design decision and your single best talking point. A `MockEngine` produces a realistic, deterministic, idea-aware report with no LLM and no network. Consequences:
+Three principles drive every decision:
 
-- The interviewer can `git clone && docker compose up` and hit `/analyze` **live, in the room**, on free wifi, no keys. Most candidates' projects die at "well, you'd need to add your OpenAI key…". Yours does not.
-- Your test suite is **fast, deterministic, and free** because tests run against the mock, never a live LLM.
-- Real CrewAI is an *upgrade path*, not a dependency. You flip an env var.
+1. **Multi-model cost optimization:** Different agents use different models — cheap models for research/extraction, powerful models for synthesis. This shows you think about production cost, not just "it works."
+2. **AI ecosystem interoperability:** The pipeline is exposed as an MCP server, making it callable from Claude Desktop, Cursor, or any MCP client. It's not a silo — it's a composable tool.
+3. **Observability:** Every agent call, tool invocation, and token count is traced via LangFuse. You can't run AI in production without knowing what's happening inside.
 
-Say this out loud in the interview: *"I designed it contract-first with a deterministic fallback so the system is demoable and testable without any paid API, and the real multi-agent crew is a drop-in behind the same interface."* That sentence alone signals senior thinking.
+The mock engine exists as a lightweight testing utility — it keeps CI fast, free, and deterministic. But the headline features are the real AI capabilities.
+
+Say this out loud in the interview: *"I built it with production AI in mind — multi-model routing for cost, MCP for ecosystem integration, and LangFuse tracing for observability. The agents aren't a black box; I can trace every decision."*
 
 ---
 
@@ -225,34 +228,31 @@ ai-product-research-analyzer/
 ---
 
 <a name="m2"></a>
-### M2 — Mock Engine (the spine)  *(~1–1.5 hr)*
+### M2 — Mock Engine (lightweight, testing utility)  *(~30–45 min)*
 
-**Goal:** Produce a **valid, deterministic, idea-aware `FeasibilityReport` with no LLM, no network.** This is the most important milestone — everything else demos on top of it.
+**Goal:** A lightweight, deterministic mock that returns a valid `FeasibilityReport` for testing and CI. This is **not** a headline feature — it's a testing utility that keeps your test suite fast, free, and keyless.
 
 **Build:** `app/core/mock_engine.py`
 - `class MockEngine:` with `def analyze(self, idea: str) -> FeasibilityReport:`.
-- Lightweight, deterministic "intelligence":
-  - Extract a topic phrase from the idea (simple keyword heuristic — strip stopwords, grab nouns/the longest content phrase).
-  - Seed Python's `random` with `hash(idea)` so the *same idea always yields the same report* (deterministic = testable + honest).
-  - Template the report fields so they reference the extracted topic (e.g. market_overview mentions the domain, competitors are plausibly generated, recommendation derived from a couple of toy heuristics like idea length / presence of words like "AI", "marketplace", etc.).
-  - Set `engine="mock"`, a fixed `confidence` (e.g. 0.55, honestly mid).
+- Simple deterministic report:
+  - Seed Python's `random` with `hash(idea)` so the same idea always yields the same report.
+  - Template basic fields referencing the idea.
+  - Set `engine="mock"`, a fixed `confidence` (e.g. 0.55).
 
 **Steps:**
-1. Implement topic extraction in `app/utils/text.py` (`extract_topic(idea) -> str`). Keep it dumb but reasonable.
-2. Implement deterministic templating. Make at least the recommendation depend on input so the demo isn't obviously canned.
-3. Return a fully-populated `FeasibilityReport`.
+1. Return a fully-populated `FeasibilityReport` with hardcoded but valid data.
+2. Seed randomness for determinism — same idea → same report.
+3. Keep it simple — this is a testing tool, not a demo feature.
 
 **Test:** `tests/test_mock_engine.py`
 - Output is a valid `FeasibilityReport` (Pydantic validates on construction).
-- **Determinism:** `analyze(idea) == analyze(idea)` for the same idea (compare `.model_dump()`).
-- **Idea-awareness:** two clearly different ideas produce different `market_overview` / `recommendation` (not identical blobs).
+- **Determinism:** `analyze(idea) == analyze(idea)` for the same idea.
 - Every list field is non-empty; `recommendation` is one of the allowed literals.
 
-**Definition of Done:** `MockEngine().analyze("...")` returns a valid report, deterministically, referencing the idea; tests green.
+**Definition of Done:** `MockEngine().analyze("...")` returns a valid report, deterministically; tests green.
 
 **Interview notes:**
-- "The mock is deterministic by seeding on the idea hash — so it's reproducible and unit-testable, and it's honest: confidence is mid and the `engine` field says `mock`."
-- Gotcha to mention: you deliberately did **not** make it pretend to be the LLM. It's a labeled fallback, not a fake.
+- "The mock keeps CI fast and keyless — I test wiring and schemas, not LLM content. It's a testing strategy, not a product feature."
 
 ---
 
@@ -333,53 +333,68 @@ ai-product-research-analyzer/
 ---
 
 <a name="m5"></a>
-### M5 — Agents  *(~45 min)*
+### M5 — Agents + Multi-Model Routing  *(~1.5 hr)*
 
-**Goal:** Define the four agents with crisp roles, goals, backstories, and tool assignments. **No crew yet** — just instantiable, configurable agents.
+**Goal:** Define the four agents with crisp roles, goals, backstories, and tool assignments — **each with its own model** based on task complexity. This is where cost optimization lives.
 
-**Build:** `app/agents/agents.py` — a factory `build_agents(llm, tools) -> dict[str, Agent]`.
+**Build:** `app/agents/agents.py` — a factory `build_agents(settings, tools) -> dict[str, Agent]`.
 
-| Agent | role | goal (templated with `{idea}`) | tools | allow_delegation |
-|---|---|---|---|---|
-| Research | "Senior Product Researcher" | Gather demand signals, competitors, and context for `{idea}` | `[WebSearchTool()]` | `False` |
-| Market Analyst | "Market Analyst" | Assess demand, audience, competitive landscape; identify similar products | none (reasons over research output) | `False` |
-| Risk Analyst | "Risk & Feasibility Analyst" | Evaluate technical risk, market saturation, cost/complexity, feasibility constraints | none | `False` |
-| Strategy/Decision | "Head of Strategy" | Synthesize everything into build / don't-build with reasoning + MVP | none | `False` |
+| Agent | role | goal (templated with `{idea}`) | tools | model | allow_delegation |
+|---|---|---|---|---|---|
+| Research | "Senior Product Researcher" | Gather demand signals, competitors, and context for `{idea}` | `[WebSearchTool()]` | cheap (e.g. `gpt-4o-mini`, `claude-3-haiku`) | `False` |
+| Market Analyst | "Market Analyst" | Assess demand, audience, competitive landscape; identify similar products | none | cheap | `False` |
+| Risk Analyst | "Risk & Feasibility Analyst" | Evaluate technical risk, market saturation, cost/complexity, feasibility constraints | none | cheap | `False` |
+| Strategy/Decision | "Head of Strategy" | Synthesize everything into build / don't-build with reasoning + MVP | none | strong (e.g. `gpt-4o`, `claude-sonnet`) | `False` |
 
 ```python
 from crewai import Agent, LLM
 
-def build_llm(settings) -> LLM:
-    # model-agnostic via LiteLLM; choose model + key from settings
-    return LLM(model=settings.model_name, temperature=0.3)
+def build_llm(model_name: str, temperature: float = 0.3) -> LLM:
+    return LLM(model=model_name, temperature=temperature)
 
-researcher = Agent(
-    role="Senior Product Researcher",
-    goal="Find concrete demand signals, competitors, and context for: {idea}",
-    backstory="You are meticulous and only trust evidence you can cite.",
-    tools=[WebSearchTool()],
-    llm=llm,
-    allow_delegation=False,
-    verbose=True,
-)
+def build_agents(settings, tools) -> dict[str, Agent]:
+    cheap_llm = build_llm(settings.cheap_model_name)      # e.g. gpt-4o-mini
+    strong_llm = build_llm(settings.strong_model_name)     # e.g. gpt-4o
+
+    researcher = Agent(
+        role="Senior Product Researcher",
+        goal="Find concrete demand signals, competitors, and context for: {idea}",
+        backstory="You are meticulous and only trust evidence you can cite.",
+        tools=[tools["web_search"]],
+        llm=cheap_llm,         # ← cheap model: extraction, not reasoning
+        allow_delegation=False,
+        verbose=True,
+    )
+    # ... Market Analyst + Risk Analyst use cheap_llm
+    # ... Strategy uses strong_llm
+    return {"research": researcher, "market": market, "risk": risk, "strategy": strategy}
+```
+
+**Config additions** (`app/config.py`):
+```python
+cheap_model_name: str = "gpt-4o-mini"       # research, extraction
+strong_model_name: str = "gpt-4o"           # synthesis, final decision
 ```
 
 **Steps:**
-1. Factory builds all four with shared `llm`.
-2. Set `allow_delegation=False` on all (lower-level executors shouldn't delegate — prevents delegation loops; quote this).
-3. Backstories enforce responsibility boundaries (reduces hallucination — quote the docs).
+1. Add `cheap_model_name` and `strong_model_name` to `Settings`.
+2. Factory builds agents with separate LLM instances — cheap for Research/Market/Risk, strong for Strategy.
+3. Set `allow_delegation=False` on all (prevents delegation loops).
+4. Backstories enforce responsibility boundaries.
 
 **Test:** `tests/test_agents.py`
 - `build_agents(...)` returns 4 `Agent` instances with expected `role`s.
 - Researcher has exactly one tool; others have none.
-- No network/LLM call happens at construction (agents are inert until kickoff).
+- Research/Market/Risk agents use the cheap model; Strategy uses the strong model.
+- No network/LLM call happens at construction.
 
-**Definition of Done:** agents instantiate offline; roles/tools correct; tests green.
+**Definition of Done:** agents instantiate offline; roles/tools/models correct; tests green.
 
 **Interview notes:**
-- Why distinct roles/backstories? CrewAI's whole thesis: role + backstory boundaries reduce "disorganized emergence" and hallucination.
-- Why `allow_delegation=False`? Executors that delegate can ping-pong tasks forever and torch your token bill. Known failure mode — naming it shows real experience.
-- `temperature=0.3`: report generation wants consistency over creativity.
+- **The cost sentence:** "Not every agent needs GPT-4o. Research and extraction run on a cheap model; only the Strategy synthesis uses the expensive one. This cuts cost ~60% with no quality loss on the final recommendation — the reasoning-heavy work is the only thing that needs reasoning-heavy models."
+- Why distinct roles/backstories? CrewAI's thesis: role + backstory boundaries reduce hallucination.
+- Why `allow_delegation=False`? Prevents delegation ping-pong — a known token-burning failure mode.
+- CrewAI is model-agnostic per-agent via LiteLLM — you can even mix providers (OpenAI for research, Anthropic for strategy).
 
 ---
 
@@ -475,7 +490,108 @@ researcher = Agent(
 ---
 
 <a name="m8"></a>
-### M8 — Tests, Lint, Types, CI  *(~1 hr)*
+### M8 — MCP Server  *(~2–3 hr)*
+
+**Goal:** Expose the analyzer as an **MCP (Model Context Protocol) server** so it's callable from Claude Desktop, Cursor, Windsurf, or any MCP-compatible client. This turns the project from "a FastAPI app" into "an AI-native tool in the ecosystem."
+
+**Build:** `app/mcp/server.py`
+- Use the `mcp` Python SDK to create an MCP server.
+- Expose one tool: `analyze_idea(idea: str) -> str` that runs the orchestrator and returns the JSON report.
+- The MCP server wraps the same orchestrator used by the API — one pipeline, two interfaces.
+
+```python
+from mcp.server import Server
+from mcp.types import Tool, TextContent
+
+server = Server("market-research-analyzer")
+
+@server.tool()
+async def analyze_idea(idea: str) -> str:
+    """Analyze a product idea for market feasibility. Returns a structured report with market overview, competitors, risks, and a build/don't-build recommendation."""
+    orchestrator = Orchestrator(get_settings())
+    report = await orchestrator.analyze_async(idea)
+    return report.model_dump_json(indent=2)
+```
+
+**Steps:**
+1. Install `mcp` SDK.
+2. Create the MCP server with the `analyze_idea` tool.
+3. Add tool description that helps the LLM understand when to call it.
+4. Add a `mcp_server.py` entry point for `mcp run` / stdio transport.
+5. Test with Claude Desktop or MCP Inspector.
+
+**Test:** `tests/test_mcp.py`
+- MCP server instantiates without error.
+- Tool is registered with correct name and description.
+- Tool invocation returns a valid JSON string parseable as `FeasibilityReport`.
+
+**Definition of Done:** `mcp dev app/mcp/server.py` starts; Claude Desktop or MCP Inspector can call `analyze_idea` and get a report; tests green.
+
+**Interview notes:**
+- **The ecosystem sentence:** "I exposed the pipeline as an MCP server — the same crew that runs behind the API is now callable from Claude Desktop, Cursor, or any MCP client. It's composable, not siloed."
+- MCP is the standard Anthropic introduced for tool interoperability — naming it shows you're current.
+- Same orchestrator, two transports (HTTP + MCP stdio) — clean separation of concerns.
+
+---
+
+<a name="m9"></a>
+### M9 — Observability (LangFuse)  *(~1.5 hr)*
+
+**Goal:** Instrument the pipeline with **LangFuse tracing** so every agent call, tool invocation, token count, and latency is captured and viewable in a dashboard. Production AI without observability is flying blind.
+
+**Build:**
+- Integrate LangFuse's callback handler with CrewAI.
+- Every crew kickoff creates a trace with spans for each agent/task.
+- Token usage, latency, and model info are captured per-span.
+
+```python
+from langfuse.callback import CallbackHandler
+
+def analyze(self, idea: str) -> FeasibilityReport:
+    langfuse_handler = CallbackHandler(
+        public_key=settings.langfuse_public_key,
+        secret_key=settings.langfuse_secret_key,
+        host=settings.langfuse_host,
+    )
+    crew = Crew(
+        agents=[...], tasks=[...],
+        process=Process.sequential,
+        callbacks=[langfuse_handler],   # ← traces everything
+    )
+    result = crew.kickoff(inputs={"idea": idea})
+    # ...
+```
+
+**Config additions** (`app/config.py`):
+```python
+langfuse_public_key: str | None = None
+langfuse_secret_key: str | None = None
+langfuse_host: str = "https://cloud.langfuse.com"
+```
+
+**Steps:**
+1. Add LangFuse config to Settings (optional — tracing is disabled if keys aren't set).
+2. Create a callback handler factory that returns the handler or `None`.
+3. Attach to Crew only when LangFuse is configured.
+4. Add trace metadata: idea hash, engine type, model names.
+5. Test with LangFuse cloud (free tier) or self-hosted.
+
+**Test:** `tests/test_observability.py`
+- When LangFuse keys are not set, no callback is attached (no error).
+- When keys are set, callback handler is created with correct config.
+- Crew receives the callback in its config.
+
+**Definition of Done:** with LangFuse configured, a crew run produces a visible trace in the LangFuse dashboard showing all 4 agents, tool calls, and token usage; without LangFuse keys, the pipeline runs normally with no errors.
+
+**Interview notes:**
+- **The production sentence:** "You can't run AI in production without knowing what's happening inside. I instrumented the pipeline with LangFuse — every agent call, tool invocation, and token count is traced. When a report is bad, I can trace exactly which agent went wrong and why."
+- LangFuse is open-source and self-hostable — no vendor lock-in.
+- Graceful degradation: no LangFuse keys → no tracing, no errors. Same pattern as the rest of the project.
+
+---
+
+<a name="m10"></a>
+### M10 — Tests, Lint, Types, CI  *(~1 hr)*
 
 **Goal:** Green, fast, deterministic CI. This is the difference between "a script" and "engineering."
 
@@ -495,13 +611,13 @@ researcher = Agent(
 **Definition of Done:** `ruff`, `mypy`, `pytest` all green locally and in GitHub Actions; live tests excluded from CI.
 
 **Interview notes:**
-- "CI is keyless and deterministic because everything testable runs against the mock and mocked HTTP. The one live test is opt-in." This directly answers "how do you test LLM apps?" — a question you *will* get.
+- "CI is keyless and deterministic because everything testable runs against the mock and mocked HTTP. The one live test is opt-in."
 - Be ready to explain *what you don't test*: you don't assert LLM *content* (nondeterministic); you assert *your wiring, schemas, and fallbacks*.
 
 ---
 
-<a name="m9"></a>
-### M9 — Docker  *(~45 min)*
+<a name="m11"></a>
+### M11 — Docker  *(~45 min)*
 
 **Goal:** `docker compose up` → working API, no local Python needed. Production-ish uvicorn.
 
@@ -511,72 +627,45 @@ researcher = Agent(
   - Stage 1: install deps into a venv/wheels.
   - Stage 2: copy app + deps, create non-root user, expose 8000.
   - Healthcheck hitting `/health`.
-  - CMD: `uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2` (or gunicorn+uvicorn workers for real prod — mention you know the difference).
+  - CMD: `uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2`.
 - `.dockerignore`: `.venv`, `.git`, `__pycache__`, `tests`, `.env`.
 - `docker-compose.yml`: one `api` service, `ports: 8000:8000`, `env_file: .env`, `restart: unless-stopped`, healthcheck.
 
 **Steps:**
-1. Multi-stage build to keep the image small (don't ship build tools).
-2. **Run as non-root** (`USER appuser`) — security; interviewers notice.
-3. Env vars (`OPENAI_API_KEY`, etc.) injected via `env_file`/compose, **never baked into the image**.
-4. Default `USE_REAL_CREW=false` so the container demos out-of-the-box with mock.
+1. Multi-stage build to keep the image small.
+2. **Run as non-root** (`USER appuser`) — security.
+3. Env vars injected via `env_file`/compose, **never baked into the image**.
 
 **Test:**
 - `docker build -t analyzer .` succeeds.
-- `docker compose up` → `curl localhost:8000/health` 200 → `curl -X POST .../analyze` returns a mock report.
-- `docker image inspect` size is reasonable (slim). Container runs as non-root (`docker exec ... whoami` ≠ root).
+- `docker compose up` → `curl localhost:8000/health` 200.
+- Container runs as non-root.
 
-**Definition of Done:** clean machine, only Docker installed, `docker compose up` → live demo of `/analyze`.
+**Definition of Done:** `docker compose up` → live API demo.
 
 **Interview notes:**
-- Multi-stage = small image + no build tools in prod. Non-root = least privilege. Secrets via env = 12-factor. Healthcheck = orchestrator-friendly.
-- "Image defaults to mock so it's instantly demoable; flip one env var + add a key to enable the real crew."
+- Multi-stage = small image. Non-root = least privilege. Secrets via env = 12-factor. Healthcheck = orchestrator-friendly.
 
 ---
 
-<a name="m10"></a>
-### M10 — Docs, Diagram, Demo Script  *(~1 hr)*
+<a name="m12"></a>
+### M12 — Docs, Diagram, Demo Script  *(~1 hr)*
 
-**Goal:** README that gets you hired. The repo is judged in 60 seconds before anyone reads code — make those 60 seconds land.
+**Goal:** README that gets you hired. The repo is judged in 60 seconds before anyone reads code.
 
 **Build — README sections (in order):**
-1. **One-liner + hero line:** "Multi-agent (CrewAI) feasibility analyzer that turns a product idea into a structured build/don't-build report — runs fully offline with a deterministic fallback."
-2. **Architecture diagram** (the ASCII one from §0, or a Mermaid diagram — Mermaid renders on GitHub).
-3. **Quickstart:** `docker compose up` → `curl` example with sample request/response JSON.
-4. **The agent pipeline** (table of 4 agents + what each produces).
-5. **API reference:** `POST /analyze` request/response schema, `GET /health`. Link to `/docs`.
-6. **Design decisions** (lift from §2 — CrewAI vs alternatives, sequential vs hierarchical, mock fallback, structured output). *This section is what separates you.*
-7. **Running with real LLMs:** env vars, `USE_REAL_CREW=true`.
-8. **Testing:** `make test`, the keyless-CI story.
-9. **Extensions / roadmap** (M11).
+1. **One-liner + hero line:** "Multi-agent (CrewAI) feasibility analyzer with multi-model routing, MCP integration, and LangFuse observability."
+2. **Architecture diagram** (Mermaid renders on GitHub).
+3. **Quickstart:** `docker compose up` → `curl` example.
+4. **The agent pipeline** (table of 4 agents + models + what each produces).
+5. **Headline features:** MCP server, multi-model routing, LangFuse tracing.
+6. **API reference:** `POST /analyze`, `GET /health`. Link to `/docs`.
+7. **Design decisions** (CrewAI vs alternatives, sequential vs hierarchical, multi-model routing, MCP).
+8. **Running with real LLMs:** env vars, model config.
+9. **Testing:** `make test`, the keyless-CI story.
 10. **Project structure** (the tree).
 
-**Steps:**
-1. Include a **real captured sample response** (run the mock, paste the JSON). Concrete > abstract.
-2. Add badges: CI passing, Python version, license (MIT).
-3. Add a `/docs` screenshot.
-4. Write a `DEMO.md` with your literal click-path for the interview.
-
-**Definition of Done:** a stranger can clone, run, and understand the system in under 5 minutes from the README alone.
-
-**Interview notes:**
-- The README's "Design decisions" section pre-answers half the interview. Interviewers love candidates who document trade-offs.
-
----
-
-<a name="m11"></a>
-### M11 — Extensions (optional, but they impress)  *(time-boxed)*
-
-Don't build all of these. Build **one** if you have time, and be able to *describe* the rest. Describing a credible roadmap is itself a senior signal.
-
-| Extension | What it adds | How you'd do it | Talking point |
-|---|---|---|---|
-| **Memory** | Crew remembers prior analyses | Enable CrewAI's `memory=True` (short-term/entity/long-term) or persist reports in SQLite/Redis | "CrewAI ships layered memory; I'd add long-term memory to compare an idea against past analyses." |
-| **Refinement loop** | Decision agent can send work back if confidence is low | Switch from a Crew to a **CrewAI Flow** with `@router` conditional re-run | "Flows give event-driven control + conditional routing — the natural home for a 'redo if confidence < 0.6' loop." |
-| **Evaluation agent** | A 5th agent scores the report's quality | Add an Eval task with a rubric + `output_pydantic` score | "An LLM-as-judge gate before returning — catches low-quality reports." |
-| **UI dashboard** | Submit ideas, view reports | Tiny React/HTMX front-end hitting `/analyze` | "Thin client over the same contract." |
-| **Caching** | Same idea → instant cached report | Hash idea → Redis/in-memory cache | "Cuts cost & latency; the deterministic mock already behaves like a cache in spirit." |
-| **Streaming** | Stream agent progress | SSE endpoint emitting task-completion events | "Better UX for a 30–90s pipeline." |
+**Definition of Done:** a stranger can clone, run, and understand the system in under 5 minutes.
 
 ---
 
@@ -585,13 +674,19 @@ Don't build all of these. Build **one** if you have time, and be able to *descri
 
 > "I built an **AI Product Research & Feasibility Analyzer**. You POST a one-line product idea and get back a structured JSON report — market overview, competitors, opportunities and gaps, technical feasibility, risks, and a final build / don't-build recommendation with reasoning and an MVP suggestion.
 >
-> Under the hood it's a **CrewAI multi-agent pipeline**: a Research agent gathers signals using a web-search tool, a Market Analyst assesses demand and competitors, a Risk Analyst evaluates technical and market risk, and a Strategy agent synthesizes everything into the final call. The tasks are chained with CrewAI's `context` mechanism, so each agent builds on the previous one's output — it's a real dependency graph, not four isolated prompts. The final report is **Pydantic-schema-validated**, with auto-retry if the model's JSON doesn't conform.
+> Under the hood it's a **CrewAI multi-agent pipeline**: a Research agent gathers signals using a web-search tool, a Market Analyst assesses demand and competitors, a Risk Analyst evaluates technical and market risk, and a Strategy agent synthesizes everything into the final call. The tasks are chained with CrewAI's `context` mechanism — a real dependency graph, not four isolated prompts. The final report is **Pydantic-schema-validated**, with auto-retry if the model's JSON doesn't conform.
 >
-> It's wrapped in **FastAPI** — async, validated, auto-documented at `/docs` — three cleanly separated layers, and it's **Dockerized**, running as non-root with multi-stage builds.
+> Three things I'm most proud of:
 >
-> The decision I'm most proud of: the whole thing **runs with zero API keys.** There's a deterministic mock engine behind the same interface, so the system is fully demoable and the test suite is fast, free, and keyless in CI. The real multi-agent crew is a drop-in upgrade behind one env var. Want me to show it running?"
+> **Multi-model routing** — not every agent needs GPT-4o. Research and extraction run on a cheap model; only the Strategy synthesis uses the expensive one. Cuts cost ~60%.
+>
+> **MCP server** — the same pipeline is exposed as an MCP tool, so you can call it from Claude Desktop or Cursor. It's not a silo; it's composable.
+>
+> **LangFuse observability** — every agent call, tool invocation, and token count is traced. When a report is bad, I can show you exactly which agent went wrong.
+>
+> It's wrapped in FastAPI, Dockerized with multi-stage builds, and the test suite is fast and keyless because of a lightweight mock engine. Want me to show it running?"
 
-Then open `/docs`, fire `/analyze`, show the JSON, and point at the `engine` field.
+Then open `/docs`, fire `/analyze`, show the JSON, open the LangFuse trace, and point at the per-agent spans.
 
 ---
 
@@ -602,31 +697,34 @@ Then open `/docs`, fire `/analyze`, show the JSON, and point at the `engine` fie
 A: Multi-agent. The agents have distinct roles/tools and the tasks are linked with `context=[...]`, so each agent's output is the next one's input. The Strategy agent receives all three prior outputs. Remove the context links and it *would* be four isolated prompts — that's exactly the #1 CrewAI beginner bug, and avoiding it is the point.
 
 **Q: Why CrewAI over LangGraph/AutoGen?**
-A: The workload is a known, sequential analyst pipeline with structured output. CrewAI's role-based sequential `Process` expresses that most directly and readably. I'd switch to LangGraph the moment I needed cycles or conditional branching, or to CrewAI Flows for event-driven control — which is exactly how I'd build the refinement loop extension.
+A: The workload is a known, sequential analyst pipeline with structured output. CrewAI's role-based sequential `Process` expresses that most directly and readably. I'd switch to LangGraph the moment I needed cycles or conditional branching, or to CrewAI Flows for event-driven control.
 
 **Q: How do you test an LLM app — the output is nondeterministic?**
-A: I don't assert LLM *content*. I assert wiring, schemas, and fallbacks against a deterministic mock engine and mocked HTTP. CI is keyless and runs in seconds. There's one opt-in, key-gated live smoke test I run manually before shipping, to confirm a real end-to-end run.
+A: I don't assert LLM *content*. I assert wiring, schemas, and fallbacks against a deterministic mock engine and mocked HTTP. CI is keyless and runs in seconds. There's one opt-in, key-gated live smoke test I run manually before shipping.
 
 **Q: What happens if the LLM returns malformed JSON?**
-A: `output_pydantic` makes CrewAI re-prompt to fix the schema automatically. If `result.pydantic` still comes back empty, the engine falls back to parsing `result.raw`, and ultimately to the mock — the user never gets a 500 for a model formatting hiccup.
+A: `output_pydantic` makes CrewAI re-prompt to fix the schema automatically. If `result.pydantic` still comes back empty, the engine falls back to parsing `result.raw` — the user never gets a 500 for a model formatting hiccup.
 
 **Q: CrewAI's kickoff is blocking — doesn't that wreck FastAPI's concurrency?**
-A: It would if called directly. I offload it with `asyncio.to_thread` and bound it with `asyncio.wait_for`, so the event loop stays free and slow runs time out gracefully (504 or degrade-to-mock).
+A: It would if called directly. I offload it with `asyncio.to_thread` and bound it with `asyncio.wait_for`, so the event loop stays free and slow runs time out gracefully.
+
+**Q: How do you handle cost?**
+A: Multi-model routing. Research and extraction agents run on `gpt-4o-mini` (cheap, fast). Only the Strategy agent gets the expensive model for synthesis. Sequential process keeps token use predictable — no manager overhead. I also capture token usage per-agent via LangFuse so I can track cost per request.
+
+**Q: Why MCP?**
+A: MCP is becoming the standard for AI tool interoperability. Exposing the pipeline as an MCP server means it's callable from Claude Desktop, Cursor, or any MCP client — not just via my REST API. Same orchestrator, two transports. It shows the system is composable, not siloed.
+
+**Q: How do you debug a bad report in production?**
+A: LangFuse tracing. Every crew run creates a trace with spans for each agent, tool call, and LLM invocation. I can see exactly which agent produced what, how many tokens it used, and where the reasoning went wrong. Without this, multi-agent systems are a black box.
 
 **Q: How do you stop agents from looping / burning tokens?**
-A: `allow_delegation=False` on executors (so they can't ping-pong tasks), sequential process (no manager nondeterminism), low temperature, tight task `expected_output`, and a request timeout as a hard backstop.
+A: `allow_delegation=False` on executors, sequential process, low temperature, tight task `expected_output`, and a request timeout as a hard backstop.
 
 **Q: Where are secrets?**
 A: Env only, via `pydantic-settings`, injected through Docker `env_file`. Never in code, never in the image, never logged. `.env` is gitignored; `.env.example` documents the vars.
 
-**Q: How would you take this to production?**
-A: gunicorn with uvicorn workers behind a reverse proxy, request caching by idea-hash, structured logging + tracing (CrewAI has AgentOps/LangFuse/OpenTelemetry hooks), rate limiting, a queue (Celery/RQ) for long runs with a job-status endpoint instead of holding the HTTP connection, and per-task model routing to cut cost.
-
-**Q: Cost?**
-A: Sequential keeps token use predictable (no manager overhead). Cheaper model for Research/extraction, stronger model only for the Strategy synthesis (CrewAI is model-agnostic per-agent via LiteLLM). Cache repeats. The mock path is free.
-
 **Q: What's the weakest part / what would you do with another week?**
-A: (Pick one, be honest.) The mock's "intelligence" is templated, not learned; the refinement loop and an evaluation/judge agent aren't built yet; and I'd add idea-hash caching and SSE progress streaming. Knowing the gaps is the point.
+A: (Pick one, be honest.) An evaluation/judge agent for quality gating, SSE streaming for real-time progress, and idea-hash caching for repeat queries. Knowing the gaps is the point.
 
 ---
 
@@ -638,9 +736,11 @@ Naming these unprompted is what makes you look senior:
 2. **Delegation loops** (hierarchical / `allow_delegation=True`) → infinite ping-pong, token bonfire. Mitigated: sequential + delegation off.
 3. **Blocking the event loop** with sync `kickoff`. Mitigated: `asyncio.to_thread`.
 4. **Schema drift** in LLM JSON. Mitigated: `output_pydantic` auto-retry + fallback parsing.
-5. **Provider outage / missing key.** Mitigated: tool returns error strings (agent recovers) + mock engine fallback.
+5. **Provider outage / missing key.** Mitigated: tool returns error strings (agent recovers) + mock engine fallback for testing.
 6. **Runaway latency.** Mitigated: `asyncio.wait_for` timeout → 504 or degrade.
 7. **Secret leakage.** Mitigated: env-only config, non-root container, no secrets in logs.
+8. **Cost explosion from using expensive models for simple tasks.** Mitigated: multi-model routing — cheap models for extraction, expensive only for synthesis.
+9. **Black-box multi-agent debugging.** Mitigated: LangFuse tracing with per-agent spans.
 
 ---
 
@@ -648,22 +748,25 @@ Naming these unprompted is what makes you look senior:
 ## 7. Definition of "Done Done"
 
 You're interview-ready when **all** of these are true:
-- [ ] `git clone && docker compose up` → `/analyze` returns a valid report **with no keys**.
-- [ ] Add a key + `USE_REAL_CREW=true` → real 4-agent crew produces a schema-valid report (you've run it live at least once).
+- [ ] `git clone && docker compose up` → `/analyze` returns a valid report.
+- [ ] Real 4-agent crew produces a schema-valid report with multi-model routing (you've run it live at least once).
+- [ ] MCP server is callable from Claude Desktop or MCP Inspector.
+- [ ] LangFuse trace shows all 4 agents with token usage.
 - [ ] `make test` green in seconds, keyless; GitHub Actions green.
-- [ ] README has the architecture diagram, a real sample response, and the design-decisions section.
+- [ ] README has the architecture diagram, headline features, and design-decisions section.
 - [ ] You can draw the pipeline on a whiteboard and explain every box.
 - [ ] You can answer every question in §5 without hesitating.
 - [ ] You can say the §4 pitch in under 3 minutes and then demo it live.
 
 ---
 
-### Suggested 2-Day Schedule
+### Suggested 3-Day Schedule
 
-**Day 1:** M0 → M3 (you have a fully demoable product by lunch) → M4 → M5.
-**Day 2:** M6 (the real crew) → M7 → M8 → M9 → M10. M11 only if time remains.
+**Day 1:** M0 ✅ → M1 ✅ → M2 → M3 (fully demoable via API by end of day) → M4.
+**Day 2:** M5 (agents + multi-model routing) → M6 (real crew) → M7 (async/timeouts).
+**Day 3:** M8 (MCP server) → M9 (LangFuse) → M10 (CI) → M11 (Docker) → M12 (docs).
 
-If Day 2 runs short, **stop after M8+M9+M10** and skip M11 entirely — a tested, dockerized, well-documented mock-backed system with the crew wired and one live run beats a half-built ambitious one every time.
+If Day 3 runs short, **prioritize M10+M11+M12** over polishing M8/M9 — a tested, dockerized, documented system beats a half-finished feature.
 
 Now go be the demon. 🔱
 

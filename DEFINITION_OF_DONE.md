@@ -32,11 +32,11 @@ You're interview-ready when **all** of these are true:
 - [x] All list fields non-empty; `recommendation` is a valid literal
 - [x] Tests green
 
-### M3 — API wired to Orchestrator
-- [ ] `curl POST /analyze` returns a valid report end-to-end (mock engine)
-- [ ] `POST /analyze {"idea": "hi"}` → 422 (too short)
-- [ ] `POST /analyze {}` → 422
-- [ ] 3+ API tests green
+### M3 — API wired to Orchestrator ✅
+- [x] `curl POST /analyze` returns a valid report end-to-end (mock engine)
+- [x] `POST /analyze {"idea": "hi"}` → 422 (too short)
+- [x] `POST /analyze {}` → 422
+- [x] 3+ API tests green
 
 ### M4 — Tools Layer
 - [ ] `WebSearchTool()._run("AI tutors")` returns useful text in all modes (Serper / Tavily / mock)

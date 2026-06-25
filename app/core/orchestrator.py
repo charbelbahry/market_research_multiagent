@@ -12,8 +12,6 @@ class CrewEngine:
     """Stub for the real LLM engine, to be implemented in M6."""
 
     def analyze(self, idea: str) -> FeasibilityReport:
-        # For now, it just delegates to the mock engine
-        # In M6 this will be replaced with actual CrewAI logic
         return MockEngine().analyze(idea)
 
 
@@ -45,7 +43,7 @@ class Orchestrator:
 
         meta = AnalyzeMeta(
             duration_ms=duration_ms,
-            model=None,  # Will be populated by CrewEngine in M6
+            model=None,
         )
 
         return AnalyzeResponse(report=report, meta=meta)

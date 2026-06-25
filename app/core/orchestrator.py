@@ -27,10 +27,10 @@ class Orchestrator:
         use_real = self.settings.use_real_crew
 
         if use_real:
-            logger.info(f"Using CrewEngine for idea length {len(idea)}")
+            logger.info("Using CrewEngine", extra={"idea_length": len(idea), "engine_used": "crew"})
             engine_to_use = self.crew_engine  # type: ignore
         else:
-            logger.info(f"Using MockEngine for idea length {len(idea)}")
+            logger.info("Using MockEngine", extra={"idea_length": len(idea), "engine_used": "mock"})
             engine_to_use = self.mock_engine  # type: ignore
 
         report = engine_to_use.analyze(idea)
@@ -38,7 +38,12 @@ class Orchestrator:
         duration_ms = int((time.time() - start_time) * 1000)
 
         logger.info(
-            f"Analysis complete. Engine: {report.engine}, Duration: {duration_ms}ms"
+            "Analysis complete",
+            extra={
+                "engine_used": report.engine,
+                "duration_ms": duration_ms,
+                "idea_length": len(idea),
+            }
         )
 
         meta = AnalyzeMeta(

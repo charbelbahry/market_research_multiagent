@@ -102,6 +102,10 @@ class AnalyzeMeta(BaseModel):
         default=None,
         description="The LLM model used, if applicable.",
     )
+    degraded: bool = Field(
+        default=False,
+        description="True if the real crew failed or timed out and fell back to the mock engine.",
+    )
 
 
 class AnalyzeResponse(BaseModel):

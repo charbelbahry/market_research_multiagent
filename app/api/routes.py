@@ -14,6 +14,6 @@ def check_health():
 
 
 @router.post("/analyze", response_model=AnalyzeResponse, status_code=status.HTTP_200_OK)
-def analyze_idea(request: AnalyzeRequest, settings: Settings = Depends(get_settings)):
+async def analyze_idea(request: AnalyzeRequest, settings: Settings = Depends(get_settings)):
     orchestrator = Orchestrator(settings)
-    return orchestrator.analyze(request.idea)
+    return await orchestrator.analyze_async(request.idea)

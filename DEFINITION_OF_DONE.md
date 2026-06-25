@@ -59,11 +59,11 @@ You're interview-ready when **all** of these are true:
 - [x] Token usage captured in response meta
 - [x] All non-live tests green
 
-### M7 — Async, Timeouts, Graceful Degradation
-- [ ] Concurrent requests don't serialize (proves non-blocking)
-- [ ] Timeout triggers 504 or degraded response
-- [ ] Exception in engine → 500 with no leaked internals
-- [ ] Tests green
+### M7 — Async, Timeouts, Graceful Degradation ✅
+- [x] Concurrent requests don't serialize (proves non-blocking)
+- [x] Timeout triggers 504 or degraded response
+- [x] Exception in engine → 500 with no leaked internals
+- [x] Tests green
 
 ### M8 — MCP Server
 - [ ] MCP server instantiates and registers `analyze_idea` tool

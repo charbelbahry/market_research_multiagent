@@ -9,9 +9,11 @@ def build_llm(model_name: str, temperature: float = 0.3) -> LLM:
     return LLM(model=model_name, temperature=temperature)
 
 
-def build_agents(settings: Settings, tools: dict[str, BaseTool] | None = None) -> dict[str, Agent]:
+def build_agents(
+    settings: Settings, tools: dict[str, BaseTool] | None = None
+) -> dict[str, Agent]:
     """Build and return the 4 core agents for the feasibility pipeline."""
-    
+
     if tools is None:
         tools = {"web_search": WebSearchTool()}
 

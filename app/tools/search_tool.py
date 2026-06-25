@@ -37,8 +37,8 @@ class WebSearchTool(BaseTool):
                 from crewai_tools import TavilySearchTool
 
                 os.environ["TAVILY_API_KEY"] = settings.tavily_api_key
-                tool = TavilySearchTool()
-                return str(tool._run(query=query))
+                tavily_tool = TavilySearchTool()
+                return str(tavily_tool._run(query=query))
 
             else:
                 return get_mock_search_results(query)

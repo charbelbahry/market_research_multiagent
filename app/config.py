@@ -4,7 +4,7 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     app_name: str = "AI product research analyzer"
-    cheap_model_name: str = "openrouter/google/gemini-2.5-flash-exp:free"
+    cheap_model_name: str = "openrouter/google/gemini-2.0-flash-exp:free"
     strong_model_name: str = "openrouter/deepseek/deepseek-r1:free"
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None

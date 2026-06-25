@@ -8,10 +8,10 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
     open_router_api_key: str | None = None
-    serpapi_api_key: str | None = None
+    serper_api_key: str | None = None
     tavily_api_key: str | None = None
     use_real_crew: bool = False
-    request_time_out_seconds: int = 120
+    request_timeout_seconds: int = 120
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", frozen=True

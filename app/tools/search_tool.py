@@ -26,10 +26,10 @@ class WebSearchTool(BaseTool):
         settings = get_settings()
 
         try:
-            if settings.serpapi_api_key:
+            if settings.serper_api_key:
                 from crewai_tools import SerperDevTool
 
-                os.environ["SERPAPI_API_KEY"] = settings.serpapi_api_key
+                os.environ["SERPER_API_KEY"] = settings.serper_api_key
                 tool = SerperDevTool(n_results=max_results)
                 return str(tool._run(search_query=query))
 

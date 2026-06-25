@@ -38,12 +38,12 @@ You're interview-ready when **all** of these are true:
 - [x] `POST /analyze {}` → 422
 - [x] 3+ API tests green
 
-### M4 — Tools Layer
-- [ ] `WebSearchTool()._run("AI tutors")` returns useful text in all modes (Serper / Tavily / mock)
-- [ ] No keys → mock results returned
-- [ ] HTTP errors → error string (not exception)
-- [ ] `SearchInput` rejects `max_results=99`
-- [ ] Tests green (no real network calls)
+### M4 — Tools Layer ✅
+- [x] `WebSearchTool()._run("AI tutors")` returns useful text in all modes (Serper / Tavily / mock)
+- [x] No keys → mock results returned
+- [x] HTTP errors → error string (not exception)
+- [x] `SearchInput` rejects `max_results=99`
+- [x] Tests green (no real network calls)
 
 ### M5 — Agents + Multi-Model Routing
 - [ ] `build_agents(...)` returns 4 `Agent` instances with expected roles

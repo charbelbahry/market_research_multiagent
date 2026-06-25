@@ -52,12 +52,12 @@ You're interview-ready when **all** of these are true:
 - [x] No network/LLM call happens at construction
 - [x] Tests green
 
-### M6 — Tasks & Crew
-- [ ] With a real key, `/analyze` produces a genuine 4-agent report
-- [ ] `decision_task.context` has length 3
-- [ ] `decision_task.output_pydantic is FeasibilityReport`
-- [ ] Token usage captured in response meta
-- [ ] All non-live tests green
+### M6 — Tasks & Crew ✅
+- [x] With a real key, `/analyze` produces a genuine 4-agent report
+- [x] `decision_task.context` has length 3
+- [x] `decision_task.output_pydantic is FeasibilityReport`
+- [x] Token usage captured in response meta
+- [x] All non-live tests green
 
 ### M7 — Async, Timeouts, Graceful Degradation
 - [ ] Concurrent requests don't serialize (proves non-blocking)

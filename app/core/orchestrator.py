@@ -8,18 +8,13 @@ from app.utils.logging import get_logger
 logger = get_logger(__name__)
 
 
-class CrewEngine:
-    """Stub for the real LLM engine, to be implemented in M6."""
-
-    def analyze(self, idea: str) -> FeasibilityReport:
-        return MockEngine().analyze(idea)
-
+from app.core.crew_engine import CrewEngine
 
 class Orchestrator:
     def __init__(self, settings: Settings):
         self.settings = settings
         self.mock_engine = MockEngine()
-        self.crew_engine = CrewEngine()
+        self.crew_engine = CrewEngine(settings)
 
     def analyze(self, idea: str) -> AnalyzeResponse:
         start_time = time.time()

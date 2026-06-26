@@ -84,11 +84,11 @@ You're interview-ready when **all** of these are true:
 - [x] GitHub Actions CI green
 - [x] ~80%+ coverage of non-LLM code
 
-### M11 — Docker
-- [ ] `docker build` succeeds
-- [ ] `docker compose up` → `curl /health` 200 → `curl /analyze` returns report
-- [ ] Container runs as non-root
-- [ ] Image size is reasonable (slim)
+### M11 — Docker ✅
+- [x] `docker build` succeeds
+- [x] `docker compose up` → `curl /health` 200 → `curl /analyze` returns report
+- [x] Container runs as non-root
+- [x] Image size is reasonable (357MB content — floor for crewai[tools])
 
 ### M12 — Docs, Diagram, Demo Script
 - [ ] A stranger can clone, run, and understand the system in under 5 minutes from the README alone

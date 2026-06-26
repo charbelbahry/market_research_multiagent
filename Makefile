@@ -22,5 +22,14 @@ fmt:
 typecheck:
 	uv run mypy app
 
-docker:
-	docker build -t market-research-multiagent .
+docker-build:
+	docker build -t market-research-multiagent:latest .
+
+docker-run:
+	docker compose up
+
+docker-down:
+	docker compose down
+
+docker-logs:
+	docker compose logs -f api

@@ -1,0 +1,65 @@
+name: CD — Build & Push to GHCR
+
+# Triggers only on pushes to master (after a PR merges).
+# This ensures only reviewed, passing code gets published as a Docker image.
+on:
+  push:
+    branches: [ master ]
+
+env:
+  REGISTRY: ghcr.io
+  # github.repository resolves to "charbelbahry/market_research_multiagent"
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read    # to checkout the code
+      packages: write   # to push the image to GHCR
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Log in to GHCR using the built-in GITHUB_TOKEN — no PAT needed.
+      # The token is automatically generated per-run by GitHub and scoped
+      # to this repository only.
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Extract structured metadata (tags and labels) from the git context.
+      # This generates:
+      #   - ghcr.io/charbelbahry/market_research_multiagent:latest  (for master pushes)
+      #   - ghcr.io/charbelbahry/market_research_multiagent:sha-<git_sha>  (immutable per-commit tag)
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-
+
+      # Set up BuildKit — Docker's modern build engine.
+      # Enables layer caching, multi-platform builds, and faster builds.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build the multi-stage image and push to GHCR.
+      # cache-from/cache-to: reuse layers from the previous build stored
+      # in the GHCR cache — dramatically speeds up CI builds.
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max

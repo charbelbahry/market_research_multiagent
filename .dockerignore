@@ -1,0 +1,47 @@
+# Files to exclude from the Docker build context.
+# A smaller build context = faster uploads to the Docker daemon
+# and fewer accidental secrets in the image.
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments — dependencies are installed inside the image
+.venv/
+venv/
+
+# Development tools and caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Git
+.git/
+.gitignore
+
+# CI / GitHub
+.github/
+
+# Secrets — NEVER bake .env into an image
+.env
+*.env
+
+# Tests — not needed at runtime
+tests/
+
+# Docs / planning
+*.md
+PLAN.md
+DEFINITION_OF_DONE.md
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Agents / skills (development tooling)
+.agents/

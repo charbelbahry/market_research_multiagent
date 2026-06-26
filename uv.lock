@@ -1914,22 +1914,21 @@ source = { virtual = "." }
 dependencies = [
     { name = "crewai", extra = ["tools"] },
     { name = "fastapi", extra = ["standard"] },
-    { name = "flake8" },
     { name = "httpx2" },
     { name = "langfuse" },
     { name = "litellm" },
     { name = "mcp" },
-    { name = "mypy" },
     { name = "openlit" },
     { name = "pydantic" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
     { name = "tavily-python" },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "flake8" },
     { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "ruff" },
 ]
@@ -1938,22 +1937,21 @@ dev = [
 requires-dist = [
     { name = "crewai", extras = ["tools"], specifier = ">=1.6.1" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.138.0" },
-    { name = "flake8", specifier = ">=7.3.0" },
     { name = "httpx2", specifier = ">=2.4.0" },
     { name = "langfuse", specifier = ">=4.12.0" },
     { name = "litellm", specifier = ">=1.89.4" },
     { name = "mcp", specifier = ">=1.28.0" },
-    { name = "mypy", specifier = ">=2.1.0" },
     { name = "openlit", specifier = ">=1.42.0" },
     { name = "pydantic", specifier = ">=2.13.4" },
-    { name = "pytest", specifier = ">=9.1.1" },
-    { name = "pytest-asyncio", specifier = ">=1.4.0" },
     { name = "tavily-python", specifier = ">=0.7.26" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "flake8", specifier = ">=7.3.0" },
     { name = "mypy", specifier = ">=2.1.0" },
+    { name = "pytest", specifier = ">=9.1.1" },
+    { name = "pytest-asyncio", specifier = ">=1.4.0" },
     { name = "pytest-cov", specifier = ">=7.1.0" },
     { name = "ruff", specifier = ">=0.15.20" },
 ]

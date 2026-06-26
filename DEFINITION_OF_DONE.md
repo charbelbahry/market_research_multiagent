@@ -77,12 +77,12 @@ You're interview-ready when **all** of these are true:
 - [x] No errors when LangFuse keys are absent (graceful skip)
 - [x] Tests green
 
-### M10 — Tests, Lint, Types, CI
-- [ ] `ruff check` green
-- [ ] `mypy app` green
-- [ ] `pytest -m "not live"` green (fast, keyless)
-- [ ] GitHub Actions CI green
-- [ ] ~80%+ coverage of non-LLM code
+### M10 — Tests, Lint, Types, CI ✅
+- [x] `ruff check` green
+- [x] `mypy app` green
+- [x] `pytest -m "not live"` green (fast, keyless)
+- [x] GitHub Actions CI green
+- [x] ~80%+ coverage of non-LLM code
 
 ### M11 — Docker
 - [ ] `docker build` succeeds

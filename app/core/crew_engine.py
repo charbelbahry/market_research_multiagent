@@ -26,14 +26,19 @@ class CrewEngine:
     def analyze(self, idea: str) -> FeasibilityReport:
         """Run the multi-agent pipeline."""
         import sys
-        
+
         # Suppress sys.stdout completely during kickoff
         original_stdout = sys.stdout
+
         class NullWriter:
-            def write(self, s): pass
-            def flush(self): pass
+            def write(self, s: str) -> None:
+                pass
+
+            def flush(self) -> None:
+                pass
+
         sys.stdout = NullWriter()
-        
+
         try:
             result = self.crew.kickoff(inputs={"idea": idea})
         finally:

@@ -35,7 +35,10 @@ def test_build_agents(monkeypatch):
     assert agents["research"].llm.model == "openrouter/openai/gpt-4o-mini"
     assert agents["market"].llm.model == "openrouter/openai/gpt-4o-mini"
     assert agents["risk"].llm.model == "openrouter/openai/gpt-4o-mini"
-    assert agents["strategy"].llm.model == "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free"
+    assert (
+        agents["strategy"].llm.model
+        == "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free"
+    )
 
     assert not agents["research"].allow_delegation
     assert not agents["market"].allow_delegation

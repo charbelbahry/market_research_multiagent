@@ -9,11 +9,13 @@ settings = get_settings()
 
 
 @router.get("/health", status_code=status.HTTP_200_OK)
-def check_health():
+def check_health() -> dict[str, str]:
     return {"status": "ok", "engine": "CrewAI" if settings.use_real_crew else "Mock"}
 
 
 @router.post("/analyze", response_model=AnalyzeResponse, status_code=status.HTTP_200_OK)
-async def analyze_idea(request: AnalyzeRequest, settings: Settings = Depends(get_settings)):
+async def analyze_idea(
+    request: AnalyzeRequest, settings: Settings = Depends(get_settings)
+) -> AnalyzeResponse:
     orchestrator = Orchestrator(settings)
     return await orchestrator.analyze_async(request.idea)

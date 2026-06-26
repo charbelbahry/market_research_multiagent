@@ -4,10 +4,10 @@ from app.schemas.report import FeasibilityReport
 
 def build_tasks(agents: dict[str, Agent]) -> list[Task]:
     """Build and return the 4 tasks for the feasibility pipeline.
-    
+
     The tasks are chained via `context` to form a dependency graph.
     """
-    
+
     research_task = Task(
         description=(
             "Research the product idea: {idea}. Use your web_search tool to find "

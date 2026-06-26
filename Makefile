@@ -1,9 +1,26 @@
+.PHONY: install run test lint fmt typecheck docker
+
+install:
+	uv sync
+
 run:
 	uv run uvicorn app.main:app --reload
 
-lint:
-	flake8 app
-	uv run mypy app --exclude=.venv
-
 test:
-	uv run pytest -v
+	uv run pytest -m "not live" -v
+
+test-coverage:
+	uv run pytest -m "not live" --cov=app --cov-report=term-missing
+
+lint:
+	uv run ruff check .
+
+fmt:
+	uv run ruff format .
+	uv run ruff check --fix .
+
+typecheck:
+	uv run mypy app
+
+docker:
+	docker build -t market-research-multiagent .

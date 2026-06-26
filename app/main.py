@@ -6,7 +6,6 @@ from app.api.routes import router
 def create_app() -> FastAPI:
     settings = get_settings()
 
-    # Initialize Langfuse Observability
     if settings.langfuse_public_key and settings.langfuse_secret_key:
         import os
 
@@ -16,18 +15,25 @@ def create_app() -> FastAPI:
 
         try:
             from langfuse import get_client
+
             langfuse = get_client()
-            
+
             from app.utils.logging import get_logger
+
             logger = get_logger(__name__)
-            
+
             if langfuse.auth_check():
                 import openlit
+
                 openlit.init(application_name=settings.app_name)
-                logger.info("Langfuse client authenticated and OpenLit initialized successfully.")
+                logger.info(
+                    "Langfuse client authenticated and OpenLit initialized successfully."
+                )
             else:
-                logger.error("Langfuse authentication failed. Please check your credentials and host.")
-                
+                logger.error(
+                    "Langfuse authentication failed. Please check your credentials and host."
+                )
+
         except Exception as e:
             from app.utils.logging import get_logger
 

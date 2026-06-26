@@ -6,9 +6,16 @@ project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
+# Save original stdout before CrewAI has a chance to hijack it
+original_stdout = sys.stdout
+
 from mcp.server.fastmcp import FastMCP
 from app.config import get_settings
 from app.core.orchestrator import Orchestrator
+
+# Restore original stdout. CrewAI's llm.py violently monkeypatches sys.stdout 
+# to filter LiteLLM logs, which completely corrupts MCP's stdio protocol.
+sys.stdout = original_stdout
 
 mcp = FastMCP("MarketResearchAnalyzer")
 

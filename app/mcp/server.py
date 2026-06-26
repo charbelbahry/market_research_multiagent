@@ -1,5 +1,4 @@
 import sys
-import os
 from pathlib import Path
 
 # Ensure the project root is in sys.path so 'from app...' works when run as a script

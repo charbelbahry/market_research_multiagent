@@ -27,7 +27,7 @@ def build_agents(
         tools=[tools["web_search"]],
         llm=cheap_llm,
         allow_delegation=False,
-        verbose=True,
+        verbose=False,
     )
 
     market_analyst = Agent(
@@ -37,7 +37,7 @@ def build_agents(
         tools=[],
         llm=cheap_llm,
         allow_delegation=False,
-        verbose=True,
+        verbose=False,
     )
 
     risk_analyst = Agent(
@@ -47,7 +47,7 @@ def build_agents(
         tools=[],
         llm=cheap_llm,
         allow_delegation=False,
-        verbose=True,
+        verbose=False,
     )
 
     strategy_head = Agent(
@@ -57,7 +57,7 @@ def build_agents(
         tools=[],
         llm=strong_llm,
         allow_delegation=False,
-        verbose=True,
+        verbose=False,
     )
 
     return {

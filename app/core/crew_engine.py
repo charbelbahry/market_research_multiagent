@@ -20,13 +20,24 @@ class CrewEngine:
             agents=list(self.agents_dict.values()),
             tasks=self.tasks_list,
             process=Process.sequential,
-            verbose=True,
+            verbose=False,
         )
 
     def analyze(self, idea: str) -> FeasibilityReport:
         """Run the multi-agent pipeline."""
-
-        result = self.crew.kickoff(inputs={"idea": idea})
+        import sys
+        
+        # Suppress sys.stdout completely during kickoff
+        original_stdout = sys.stdout
+        class NullWriter:
+            def write(self, s): pass
+            def flush(self): pass
+        sys.stdout = NullWriter()
+        
+        try:
+            result = self.crew.kickoff(inputs={"idea": idea})
+        finally:
+            sys.stdout = original_stdout
 
         report: FeasibilityReport | None = None
 

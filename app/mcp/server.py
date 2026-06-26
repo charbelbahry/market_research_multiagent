@@ -6,8 +6,21 @@ project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
+import os
+os.environ["CREWAI_DISABLE_TELEMETRY"] = "1"
+os.environ["OTEL_SDK_DISABLED"] = "true"
+
 # Save original stdout before CrewAI has a chance to hijack it
 original_stdout = sys.stdout
+
+import rich.console
+rich.console.Console.print = lambda *args, **kwargs: None
+
+try:
+    import crewai.utilities.printer
+    crewai.utilities.printer.Printer.print = lambda *args, **kwargs: None
+except ImportError:
+    pass
 
 from mcp.server.fastmcp import FastMCP
 from app.config import get_settings
@@ -34,10 +47,29 @@ async def analyze_idea(idea: str) -> str:
     settings = get_settings()
     orchestrator = Orchestrator(settings)
 
-    response = await orchestrator.analyze_async(idea)
+    import os
+    import sys
+
+    # Save original fd 1
+    original_fd = os.dup(1)
+    # Redirect fd 1 to fd 2 (stderr)
+    os.dup2(2, 1)
+
+    try:
+        response = await orchestrator.analyze_async(idea)
+    finally:
+        sys.stdout.flush()
+        # Restore fd 1
+        os.dup2(original_fd, 1)
+        os.close(original_fd)
 
     return response.model_dump_json()
 
 
 if __name__ == "__main__":
+    import logging
+    # Strip any handlers that CrewAI/rich might have added to the root logger
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+    
     mcp.run(transport="stdio")

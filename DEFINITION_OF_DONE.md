@@ -65,11 +65,11 @@ You're interview-ready when **all** of these are true:
 - [x] Exception in engine → 500 with no leaked internals
 - [x] Tests green
 
-### M8 — MCP Server
-- [ ] MCP server instantiates and registers `analyze_idea` tool
-- [ ] Tool callable from Claude Desktop or MCP Inspector
-- [ ] Returns valid `FeasibilityReport` JSON
-- [ ] Tests green
+### M8 — MCP Server ✅
+- [x] MCP server instantiates and registers `analyze_idea` tool
+- [x] Tool callable from Claude Desktop or MCP Inspector
+- [x] Returns valid `FeasibilityReport` JSON
+- [x] Tests green
 
 ### M9 — Observability (LangFuse)
 - [ ] LangFuse callback attached to Crew when keys are configured

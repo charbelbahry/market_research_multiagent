@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     openrouter_api_key: str | None = None
     serper_api_key: str | None = None
     tavily_api_key: str | None = None
+    langfuse_public_key: str | None = None
+    langfuse_secret_key: str | None = None
+    langfuse_host: str = "https://cloud.langfuse.com"
     use_real_crew: bool = False
     request_timeout_seconds: int = 240
 

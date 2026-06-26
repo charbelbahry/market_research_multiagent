@@ -71,11 +71,11 @@ You're interview-ready when **all** of these are true:
 - [x] Returns valid `FeasibilityReport` JSON
 - [x] Tests green
 
-### M9 — Observability (LangFuse)
-- [ ] LangFuse callback attached to Crew when keys are configured
-- [ ] Traces visible in LangFuse dashboard (all 4 agents, tool calls, token usage)
-- [ ] No errors when LangFuse keys are absent (graceful skip)
-- [ ] Tests green
+### M9 — Observability (LangFuse) ✅
+- [x] LangFuse callback attached to Crew when keys are configured
+- [x] Traces visible in LangFuse dashboard (all 4 agents, tool calls, token usage)
+- [x] No errors when LangFuse keys are absent (graceful skip)
+- [x] Tests green
 
 ### M10 — Tests, Lint, Types, CI
 - [ ] `ruff check` green

@@ -46,6 +46,11 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,prefix=sha-
 
+      # Set up QEMU to enable cross-platform (multi-architecture) emulation.
+      # This allows the Ubuntu runner (amd64) to build an image for Apple Silicon (arm64).
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       # Set up BuildKit — Docker's modern build engine.
       # Enables layer caching, multi-platform builds, and faster builds.
       - name: Set up Docker Buildx
@@ -59,6 +64,7 @@ jobs:
         with:
           context: .
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache

@@ -45,7 +45,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Running as root inside a container is a security risk: if an attacker
 # exploits the app they get root access to the container filesystem.
 RUN groupadd --system appgroup && \
-    useradd --system --gid appgroup --no-create-home --shell /sbin/nologin appuser
+    useradd --system --gid appgroup --create-home --shell /sbin/nologin appuser
 
 WORKDIR /app
 
